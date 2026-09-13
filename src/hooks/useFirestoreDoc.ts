@@ -112,7 +112,17 @@ export function useFirestoreDoc<T extends object>(
     window.dispatchEvent(new Event("portfolio_content_updated"));
   };
 
-  const resetToDefault = () => {
+  const resetToDefault = async () => {
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, collectionName, docId), defaultData as DocumentData);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+        handleFirestoreError(err, OperationType.UPDATE, `${collectionName}/${docId}`);
+      }
+    }
+
     setData(defaultData);
     localStorage.setItem(localKey, JSON.stringify(defaultData));
     window.dispatchEvent(new Event("portfolio_content_updated"));

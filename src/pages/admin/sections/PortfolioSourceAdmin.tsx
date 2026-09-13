@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { initialPortfolioData } from "../../../data/initialData";
+import { isFirebaseConfigured, savePortfolioSource } from "../../../lib/firebase";
 import {
   Code2,
   Copy,
@@ -116,9 +117,13 @@ export const PortfolioSourceAdmin: React.FC = () => {
     }
   };
 
-  const handleApplySource = () => {
+  const handleApplySource = async () => {
     try {
       const parsed = JSON.parse(editedJson);
+
+      if (isFirebaseConfigured) {
+        await savePortfolioSource(parsed);
+      }
 
       if (parsed.hero) localStorage.setItem("portfolio_cms_content_hero", JSON.stringify(parsed.hero));
       if (parsed.about) localStorage.setItem("portfolio_cms_content_about", JSON.stringify(parsed.about));
@@ -137,7 +142,12 @@ export const PortfolioSourceAdmin: React.FC = () => {
     }
   };
 
-  const handleResetFactory = () => {
+  const handleResetFactory = async () => {
+    try {
+      if (isFirebaseConfigured) {
+        await savePortfolioSource(initialPortfolioData);
+      }
+
     localStorage.setItem("portfolio_cms_content_hero", JSON.stringify(initialPortfolioData.hero));
     localStorage.setItem("portfolio_cms_content_about", JSON.stringify(initialPortfolioData.about));
     localStorage.setItem("portfolio_cms_services", JSON.stringify(initialPortfolioData.services));
@@ -151,6 +161,9 @@ export const PortfolioSourceAdmin: React.FC = () => {
     window.dispatchEvent(new Event("portfolio_content_updated"));
     loadFullSource();
     setFeedback({ type: "success", text: "Reset all portfolio source content to factory defaults!" });
+    } catch (err) {
+      setFeedback({ type: "error", text: err instanceof Error ? err.message : String(err) });
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

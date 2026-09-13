@@ -5,6 +5,8 @@ import {
   doc,
   setDoc,
   deleteDoc,
+  writeBatch,
+  getDocs,
   query,
   orderBy,
   type DocumentData,
@@ -178,7 +180,21 @@ export function useFirestoreCollection<T extends { id: string; order?: number }>
     }
   };
 
-  const resetToDefault = () => {
+  const resetToDefault = async () => {
+    if (isFirebaseConfigured && db) {
+      try {
+        const batch = writeBatch(db);
+        const existing = await getDocs(collection(db, collectionName));
+        existing.forEach((snapshot) => batch.delete(snapshot.ref));
+        defaultItems.forEach((item) => {
+          batch.set(doc(db, collectionName, item.id), item as DocumentData);
+        });
+        await batch.commit();
+      } catch (err) {
+        handleFirestoreError(err, OperationType.WRITE, collectionName);
+      }
+    }
+
     updateLocal(defaultItems);
   };
 

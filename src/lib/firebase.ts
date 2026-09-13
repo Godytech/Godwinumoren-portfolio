@@ -1,6 +1,12 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore, doc, getDocFromServer } from "firebase/firestore";
+import {
+  getFirestore,
+  type Firestore,
+  doc,
+  getDocFromServer,
+  writeBatch,
+} from "firebase/firestore";
 import {
   getStorage,
   ref,
@@ -52,6 +58,54 @@ if (isFirebaseConfigured) {
 }
 
 export { app, auth, db, storage };
+
+type PortfolioSource = {
+  hero?: object;
+  about?: object;
+  contact?: object;
+  services?: Array<object & { id: string }>;
+  projects?: Array<object & { id: string }>;
+  career?: Array<object & { id: string }>;
+  education?: Array<object & { id: string }>;
+  skills?: Array<object & { id: string }>;
+  testimonials?: Array<object & { id: string }>;
+};
+
+export async function savePortfolioSource(source: PortfolioSource): Promise<void> {
+  if (!db) {
+    throw new Error("Firebase Firestore is not configured.");
+  }
+
+  const batch = writeBatch(db);
+  const documents = [
+    ["content", "hero", source.hero],
+    ["content", "about", source.about],
+    ["content", "contact", source.contact],
+  ] as const;
+
+  documents.forEach(([collectionName, id, value]) => {
+    if (value) {
+      batch.set(doc(db, collectionName, id), value, { merge: true });
+    }
+  });
+
+  const collections = [
+    ["services", source.services],
+    ["projects", source.projects],
+    ["career", source.career],
+    ["education", source.education],
+    ["skills", source.skills],
+    ["testimonials", source.testimonials],
+  ] as const;
+
+  collections.forEach(([collectionName, items]) => {
+    items?.forEach((item) => {
+      batch.set(doc(db, collectionName, item.id), item, { merge: true });
+    });
+  });
+
+  await batch.commit();
+}
 
 async function optimizeProfileImage(file: Blob): Promise<Blob> {
   if (!file.type.startsWith("image/") || file.size <= 750 * 1024 || !("createImageBitmap" in window)) {
