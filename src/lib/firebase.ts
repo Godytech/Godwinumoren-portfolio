@@ -4,6 +4,8 @@ import {
   getFirestore,
   type Firestore,
   doc,
+  collection,
+  getDocs,
   getDocFromServer,
   writeBatch,
 } from "firebase/firestore";
@@ -90,6 +92,24 @@ export async function savePortfolioSource(source: PortfolioSource): Promise<void
   collections.forEach(([collectionName, items]) => {
     items?.forEach((item) => {
       batch.set(doc(db, collectionName, item.id), item, { merge: true });
+    });
+  });
+
+  const existingCollections = await Promise.all(
+    collections.map(async ([collectionName]) => [
+      collectionName,
+      await getDocs(collection(db, collectionName)),
+    ] as const)
+  );
+  existingCollections.forEach(([collectionName, snapshot]) => {
+    const incomingIds = new Set(
+      (source[collectionName as keyof PortfolioSource] as Array<{ id: string }> | undefined)
+        ?.map((item) => item.id) ?? []
+    );
+    snapshot.forEach((item) => {
+      if (!incomingIds.has(item.id)) {
+        batch.delete(item.ref);
+      }
     });
   });
 

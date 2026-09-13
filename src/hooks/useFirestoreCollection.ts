@@ -8,7 +8,6 @@ import {
   writeBatch,
   getDocs,
   query,
-  orderBy,
   type DocumentData,
 } from "firebase/firestore";
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from "../lib/firebase";
@@ -58,7 +57,7 @@ export function useFirestoreCollection<T extends { id: string; order?: number }>
     }
 
     try {
-      const q = query(collection(db, collectionName), orderBy("order", "asc"));
+      const q = query(collection(db, collectionName));
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
@@ -121,9 +120,6 @@ export function useFirestoreCollection<T extends { id: string; order?: number }>
   const addItem = async (itemData: Omit<T, "id"> & { id?: string }) => {
     const newId = itemData.id || `${collectionName.slice(0, 4)}-${Date.now()}`;
     const newItem = { ...itemData, id: newId } as T;
-    const updated = [...items, newItem].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    updateLocal(updated);
-
     if (isFirebaseConfigured && db) {
       try {
         await setDoc(doc(db, collectionName, newId), newItem as DocumentData);
@@ -131,15 +127,12 @@ export function useFirestoreCollection<T extends { id: string; order?: number }>
         handleFirestoreError(err, OperationType.CREATE, `${collectionName}/${newId}`);
       }
     }
+    const updated = [...items, newItem].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    updateLocal(updated);
     return newItem;
   };
 
   const updateItem = async (id: string, partial: Partial<T>) => {
-    const updated = items.map((item) =>
-      item.id === id ? { ...item, ...partial } : item
-    ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    updateLocal(updated);
-
     if (isFirebaseConfigured && db) {
       try {
         await setDoc(doc(db, collectionName, id), partial as DocumentData, { merge: true });
@@ -147,12 +140,13 @@ export function useFirestoreCollection<T extends { id: string; order?: number }>
         handleFirestoreError(err, OperationType.UPDATE, `${collectionName}/${id}`);
       }
     }
+    const updated = items.map((item) =>
+      item.id === id ? { ...item, ...partial } : item
+    ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    updateLocal(updated);
   };
 
   const deleteItem = async (id: string) => {
-    const updated = items.filter((item) => item.id !== id);
-    updateLocal(updated);
-
     if (isFirebaseConfigured && db) {
       try {
         await deleteDoc(doc(db, collectionName, id));
@@ -160,6 +154,8 @@ export function useFirestoreCollection<T extends { id: string; order?: number }>
         handleFirestoreError(err, OperationType.DELETE, `${collectionName}/${id}`);
       }
     }
+    const updated = items.filter((item) => item.id !== id);
+    updateLocal(updated);
   };
 
   const reorderItems = async (newOrderedItems: T[]) => {
@@ -167,17 +163,16 @@ export function useFirestoreCollection<T extends { id: string; order?: number }>
       ...item,
       order: idx + 1,
     }));
-    updateLocal(normalized);
-
     if (isFirebaseConfigured && db) {
       for (const item of normalized) {
         try {
           await setDoc(doc(db, collectionName, item.id), { order: item.order } as DocumentData, { merge: true });
         } catch (err) {
-          console.error(`Failed to update order for ${item.id}`, err);
+          handleFirestoreError(err, OperationType.UPDATE, `${collectionName}/${item.id}`);
         }
       }
     }
+    updateLocal(normalized);
   };
 
   const resetToDefault = async () => {
