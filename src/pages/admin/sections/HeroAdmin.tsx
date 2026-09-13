@@ -155,6 +155,7 @@ export const HeroAdmin: React.FC = () => {
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.currentTarget.value = "";
     if (file) {
       if (!file.type.startsWith("image/")) {
         setUploadError("Please select an image file.");

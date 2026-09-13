@@ -144,6 +144,11 @@ export async function uploadProfileImage(file: Blob): Promise<string> {
     throw new Error("Firebase Storage requires a signed-in account.");
   }
 
+  if (!auth.currentUser.emailVerified) {
+    throw new Error("Please verify your admin email before uploading an image.");
+  }
+
+  await auth.currentUser.getIdToken(true);
   const optimizedFile = await optimizeProfileImage(file);
   const imageRef = ref(storage, `profile-images/${auth.currentUser.uid}/avatar-${Date.now()}`);
   await new Promise<void>((resolve, reject) => {
