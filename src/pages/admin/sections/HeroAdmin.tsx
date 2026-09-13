@@ -152,7 +152,7 @@ export const HeroAdmin: React.FC = () => {
     }));
   };
 
-  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
@@ -165,12 +165,17 @@ export const HeroAdmin: React.FC = () => {
       }
       setUploadingAvatar(true);
       setUploadError(null);
-      uploadProfileImage(file)
-        .then((avatarUrl) => setForm((prev) => ({ ...prev, avatarUrl })))
-        .catch((err: unknown) => {
-          setUploadError(err instanceof Error ? err.message : String(err));
-        })
-        .finally(() => setUploadingAvatar(false));
+      try {
+        const avatarUrl = await uploadProfileImage(file);
+        setForm((prev) => ({ ...prev, avatarUrl }));
+        await updateDocData({ avatarUrl });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      } catch (err: unknown) {
+        setUploadError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setUploadingAvatar(false);
+      }
     }
   };
 
