@@ -173,7 +173,6 @@ export async function uploadProfileImage(file: Blob): Promise<string> {
     throw new Error("Please verify your admin email before uploading an image.");
   }
 
-  await auth.currentUser.getIdToken(true);
   return imageToFirestoreUrl(file);
 }
 

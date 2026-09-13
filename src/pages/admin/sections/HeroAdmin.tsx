@@ -134,7 +134,11 @@ export const HeroAdmin: React.FC = () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : String(err));
+      setUploadError(
+        err instanceof Error
+          ? err.message
+          : "Unable to save changes to Firebase. Check your connection and sign in again."
+      );
     }
   };
 
