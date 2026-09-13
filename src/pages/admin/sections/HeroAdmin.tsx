@@ -12,6 +12,7 @@ import {
   Palette,
   CreditCard,
   Eye,
+  X,
 } from "lucide-react";
 
 const cardColorPresets = [
@@ -176,6 +177,21 @@ export const HeroAdmin: React.FC = () => {
       } finally {
         setUploadingAvatar(false);
       }
+    }
+  };
+
+  const handleClearAvatar = async () => {
+    setUploadingAvatar(true);
+    setUploadError(null);
+    try {
+      await updateDocData({ avatarUrl: "" });
+      setForm((prev) => ({ ...prev, avatarUrl: "" }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -775,11 +791,23 @@ export const HeroAdmin: React.FC = () => {
           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">ID Card Avatar Photo</label>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             {form.avatarUrl && (
-              <img
-                src={form.avatarUrl}
-                alt="Avatar Preview"
-                className="w-16 h-16 rounded-2xl object-cover border border-primary/30 shadow-md shrink-0"
-              />
+              <div className="relative shrink-0">
+                <img
+                  src={form.avatarUrl}
+                  alt="Avatar Preview"
+                  className="w-16 h-16 rounded-2xl object-cover border border-primary/30 shadow-md"
+                />
+                <button
+                  type="button"
+                  onClick={handleClearAvatar}
+                  disabled={uploadingAvatar}
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md disabled:opacity-50"
+                  aria-label="Remove avatar image"
+                  title="Remove avatar image"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
             <div className="flex-1 w-full space-y-2">
               <input
