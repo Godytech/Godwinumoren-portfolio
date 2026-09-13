@@ -1,0 +1,169 @@
+{
+  "entities": {
+    "Hero": {
+      "title": "Hero",
+      "description": "Portfolio hero section content",
+      "type": "object",
+      "properties": {
+        "headline": { "type": "string", "maxLength": 200 },
+        "name": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "maxLength": 150 },
+        "subheadline": { "type": "string", "maxLength": 1000 },
+        "ctaText": { "type": "string", "maxLength": 100 },
+        "ctaLink": { "type": "string", "maxLength": 500 },
+        "resumeUrl": { "type": "string", "maxLength": 500 },
+        "availableForWork": { "type": "boolean" },
+        "badgeId": { "type": "string", "maxLength": 100 },
+        "avatarUrl": { "type": "string", "maxLength": 1000 },
+        "location": { "type": "string", "maxLength": 150 },
+        "experienceYears": { "type": "string", "maxLength": 50 },
+        "specialty": { "type": "string", "maxLength": 150 }
+      },
+      "required": ["headline", "name", "role", "subheadline"]
+    },
+    "About": {
+      "title": "About",
+      "description": "Portfolio about section content",
+      "type": "object",
+      "properties": {
+        "heading": { "type": "string", "maxLength": 200 },
+        "highlight": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2500 },
+        "stats": { "type": "array" }
+      },
+      "required": ["heading", "description"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Featured portfolio project",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200 },
+        "subtitle": { "type": "string", "maxLength": 500 },
+        "link": { "type": "string", "maxLength": 500 },
+        "image": { "type": "string", "maxLength": 1500 },
+        "gridClass": { "type": "string", "maxLength": 100 },
+        "order": { "type": "number" }
+      },
+      "required": ["title", "subtitle", "link", "order"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Services offered",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "icon": { "type": "string", "maxLength": 100 },
+        "order": { "type": "number" }
+      },
+      "required": ["title", "description", "order"]
+    },
+    "Career": {
+      "title": "Career",
+      "description": "Career history event",
+      "type": "object",
+      "properties": {
+        "year": { "type": "string", "maxLength": 100 },
+        "title": { "type": "string", "maxLength": 200 },
+        "subtitle": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "icon": { "type": "string", "maxLength": 100 },
+        "order": { "type": "number" }
+      },
+      "required": ["year", "title", "description", "order"]
+    },
+    "Education": {
+      "title": "Education",
+      "description": "Academic background",
+      "type": "object",
+      "properties": {
+        "degree": { "type": "string", "maxLength": 200 },
+        "school": { "type": "string", "maxLength": 200 },
+        "year": { "type": "string", "maxLength": 100 },
+        "badge": { "type": "string", "maxLength": 100 },
+        "details": { "type": "array" },
+        "order": { "type": "number" }
+      },
+      "required": ["degree", "school", "year", "order"]
+    },
+    "Skill": {
+      "title": "Skill",
+      "description": "Technical or soft skill",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "level": { "type": "number" },
+        "category": { "type": "string", "enum": ["technical", "soft"] },
+        "icon": { "type": "string", "maxLength": 100 },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "level", "category", "order"]
+    },
+    "Testimonial": {
+      "title": "Testimonial",
+      "description": "Client recommendation testimonial",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "maxLength": 150 },
+        "content": { "type": "string", "maxLength": 2000 },
+        "image": { "type": "string", "maxLength": 1500 },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "role", "content", "order"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "Contact info and links",
+      "type": "object",
+      "properties": {
+        "headline": { "type": "string", "maxLength": 200 },
+        "subheadline": { "type": "string", "maxLength": 1000 },
+        "email": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "location": { "type": "string", "maxLength": 150 },
+        "socialLinks": { "type": "array" }
+      },
+      "required": ["email"]
+    }
+  },
+  "firestore": {
+    "/content/hero": {
+      "schema": { "$ref": "Hero" },
+      "description": "Hero section content document"
+    },
+    "/content/about": {
+      "schema": { "$ref": "About" },
+      "description": "About section content document"
+    },
+    "/content/contact": {
+      "schema": { "$ref": "Contact" },
+      "description": "Contact section content document"
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "Project" },
+      "description": "Collection of featured portfolio projects"
+    },
+    "/services/{serviceId}": {
+      "schema": { "$ref": "Service" },
+      "description": "Collection of offered services"
+    },
+    "/career/{careerId}": {
+      "schema": { "$ref": "Career" },
+      "description": "Collection of career journey entries"
+    },
+    "/education/{educationId}": {
+      "schema": { "$ref": "Education" },
+      "description": "Collection of educational degrees"
+    },
+    "/skills/{skillId}": {
+      "schema": { "$ref": "Skill" },
+      "description": "Collection of expertise and traits"
+    },
+    "/testimonials/{testimonialId}": {
+      "schema": { "$ref": "Testimonial" },
+      "description": "Collection of client testimonials"
+    }
+  }
+}

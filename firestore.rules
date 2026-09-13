@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    // Default deny rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Public single document content: hero, about, contact
+    match /content/{docId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Public collections
+    match /projects/{projectId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /career/{careerId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /education/{educationId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /skills/{skillId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+  }
+}
