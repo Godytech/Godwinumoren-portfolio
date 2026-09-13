@@ -7,19 +7,11 @@ import {
   getDocFromServer,
   writeBatch,
 } from "firebase/firestore";
-import {
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-  type FirebaseStorage,
-} from "firebase/storage";
 
 // Read environment variables
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
 const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
 const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-const storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
 const messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID;
 const appId = import.meta.env.VITE_FIREBASE_APP_ID;
 
@@ -28,7 +20,6 @@ export const isFirebaseConfigured = Boolean(apiKey && projectId);
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
-let storage: FirebaseStorage | null = null;
 
 if (isFirebaseConfigured) {
   try {
@@ -36,7 +27,6 @@ if (isFirebaseConfigured) {
       apiKey,
       authDomain,
       projectId,
-      storageBucket,
       messagingSenderId,
       appId,
     };
@@ -44,7 +34,6 @@ if (isFirebaseConfigured) {
     app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
-    storage = getStorage(app);
 
     // Initial connection validation
     getDocFromServer(doc(db, "test", "connection")).catch((err) => {
@@ -57,7 +46,7 @@ if (isFirebaseConfigured) {
   }
 }
 
-export { app, auth, db, storage };
+export { app, auth, db };
 
 type PortfolioSource = {
   hero?: object;
@@ -107,41 +96,57 @@ export async function savePortfolioSource(source: PortfolioSource): Promise<void
   await batch.commit();
 }
 
-async function optimizeProfileImage(file: Blob): Promise<Blob> {
-  if (!file.type.startsWith("image/") || file.size <= 750 * 1024 || !("createImageBitmap" in window)) {
-    return file;
+async function imageToFirestoreUrl(file: Blob): Promise<string> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("The selected file is not an image.");
   }
 
-  try {
-    const image = await createImageBitmap(file);
-    const maxDimension = 1200;
-    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.width * scale));
-    canvas.height = Math.max(1, Math.round(image.height * scale));
-
-    const context = canvas.getContext("2d");
-    if (!context) {
-      image.close();
-      return file;
+  if (!("createImageBitmap" in window)) {
+    if (file.size > 700 * 1024) {
+      throw new Error("This browser cannot compress the image. Select an image smaller than 700 KB.");
     }
-
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    image.close();
-
-    const optimized = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", 0.82)
-    );
-    return optimized ?? file;
-  } catch (error) {
-    console.warn("Profile image optimization was skipped:", error);
-    return file;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error("Could not read the selected image."));
+      reader.readAsDataURL(file);
+    });
   }
+
+  const image = await createImageBitmap(file);
+  const maxDimension = 1000;
+  const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    image.close();
+    throw new Error("Could not prepare the image for Firestore.");
+  }
+
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  image.close();
+  const optimized = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.75)
+  );
+
+  if (!optimized || optimized.size > 700 * 1024) {
+    throw new Error("Image is too large to store in Firestore. Choose a smaller image.");
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not read the optimized image."));
+    reader.readAsDataURL(optimized);
+  });
 }
 
 export async function uploadProfileImage(file: Blob): Promise<string> {
-  if (!storage || !auth?.currentUser) {
-    throw new Error("Firebase Storage requires a signed-in account.");
+  if (!db || !auth?.currentUser) {
+    throw new Error("Firebase Firestore requires a signed-in account.");
   }
 
   if (!auth.currentUser.emailVerified) {
@@ -149,16 +154,7 @@ export async function uploadProfileImage(file: Blob): Promise<string> {
   }
 
   await auth.currentUser.getIdToken(true);
-  const optimizedFile = await optimizeProfileImage(file);
-  const imageRef = ref(storage, `profile-images/${auth.currentUser.uid}/avatar-${Date.now()}`);
-  await new Promise<void>((resolve, reject) => {
-    const uploadTask = uploadBytesResumable(imageRef, optimizedFile, {
-      contentType: optimizedFile.type || "image/jpeg",
-    });
-
-    uploadTask.on("state_changed", undefined, reject, resolve);
-  });
-  return getDownloadURL(imageRef);
+  return imageToFirestoreUrl(file);
 }
 
 export enum OperationType {
