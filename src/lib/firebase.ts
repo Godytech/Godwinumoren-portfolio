@@ -1,7 +1,13 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore, doc, getDocFromServer } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL, type FirebaseStorage } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  type FirebaseStorage,
+} from "firebase/storage";
 
 // Read environment variables
 const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
@@ -47,13 +53,52 @@ if (isFirebaseConfigured) {
 
 export { app, auth, db, storage };
 
+async function optimizeProfileImage(file: Blob): Promise<Blob> {
+  if (!file.type.startsWith("image/") || file.size <= 750 * 1024 || !("createImageBitmap" in window)) {
+    return file;
+  }
+
+  try {
+    const image = await createImageBitmap(file);
+    const maxDimension = 1200;
+    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      image.close();
+      return file;
+    }
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    image.close();
+
+    const optimized = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.82)
+    );
+    return optimized ?? file;
+  } catch (error) {
+    console.warn("Profile image optimization was skipped:", error);
+    return file;
+  }
+}
+
 export async function uploadProfileImage(file: Blob): Promise<string> {
   if (!storage || !auth?.currentUser) {
     throw new Error("Firebase Storage requires a signed-in account.");
   }
 
+  const optimizedFile = await optimizeProfileImage(file);
   const imageRef = ref(storage, `profile-images/${auth.currentUser.uid}/avatar-${Date.now()}`);
-  await uploadBytes(imageRef, file, { contentType: file.type || "image/jpeg" });
+  await new Promise<void>((resolve, reject) => {
+    const uploadTask = uploadBytesResumable(imageRef, optimizedFile, {
+      contentType: optimizedFile.type || "image/jpeg",
+    });
+
+    uploadTask.on("state_changed", undefined, reject, resolve);
+  });
   return getDownloadURL(imageRef);
 }
 
