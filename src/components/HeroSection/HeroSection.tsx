@@ -9,10 +9,11 @@ import { AuroraTextEffect } from "../lightswind/aurora-text-effect";
 import { DotPattern } from "../lightswind/dot-pattern";
 import { useFirestoreDoc } from "../../hooks/useFirestoreDoc";
 import { initialPortfolioData } from "../../data/initialData";
-import { HeroContent } from "../../types";
+import { ContactContent, HeroContent } from "../../types";
 
 export const HeroSection = () => {
   const { data: hero } = useFirestoreDoc<HeroContent>("content", "hero", initialPortfolioData.hero);
+  const { data: contact } = useFirestoreDoc<ContactContent>("content", "contact", initialPortfolioData.contact);
 
   return (
     <section
@@ -108,16 +109,16 @@ export const HeroSection = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.8 }}
           >
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors hover:-translate-y-1 transform duration-200" aria-label="Twitter">
+            <a href={contact.twitter || "https://twitter.com"} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors hover:-translate-y-1 transform duration-200" aria-label="Twitter">
               <Twitter className="w-5 h-5" />
             </a>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors hover:-translate-y-1 transform duration-200" aria-label="GitHub">
+            <a href={contact.github || "https://github.com"} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors hover:-translate-y-1 transform duration-200" aria-label="GitHub">
               <Github className="w-5 h-5" />
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors hover:-translate-y-1 transform duration-200" aria-label="LinkedIn">
+            <a href={contact.linkedin || "https://linkedin.com"} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors hover:-translate-y-1 transform duration-200" aria-label="LinkedIn">
               <Linkedin className="w-5 h-5" />
             </a>
-            <a href="mailto:hello@scarlettrose.dev" className="text-muted-foreground hover:text-foreground transition-colors hover:-translate-y-1 transform duration-200" aria-label="Email">
+            <a href={`mailto:${contact.email || "hello@scarlettrose.dev"}`} className="text-muted-foreground hover:text-foreground transition-colors hover:-translate-y-1 transform duration-200" aria-label="Email">
               <Mail className="w-5 h-5" />
             </a>
           </motion.div>

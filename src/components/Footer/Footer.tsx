@@ -2,7 +2,7 @@ import { Github, Linkedin, Twitter, Mail } from "lucide-react";
 import { MorphingText } from "../lightswind/morphing-text";
 import { useFirestoreDoc } from "../../hooks/useFirestoreDoc";
 import { initialPortfolioData } from "../../data/initialData";
-import { FooterContent } from "../../types";
+import { ContactContent, FooterContent } from "../../types";
 
 export const Footer = () => {
   const { data: footer } = useFirestoreDoc<FooterContent>(
@@ -10,13 +10,18 @@ export const Footer = () => {
     "footer",
     initialPortfolioData.footer
   );
+  const { data: contact } = useFirestoreDoc<ContactContent>(
+    "content",
+    "contact",
+    initialPortfolioData.contact
+  );
   const morphingTexts = footer.animatedTexts?.filter((text) => text.trim()) || [];
 
   const socialLinks = [
-    { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-    { icon: Github, href: "https://github.com", label: "GitHub" },
-    { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-    { icon: Mail, href: "mailto:hello@scarlettrose.dev", label: "Email" },
+    { icon: Twitter, href: contact.twitter || "https://twitter.com", label: "Twitter" },
+    { icon: Github, href: contact.github || "https://github.com", label: "GitHub" },
+    { icon: Linkedin, href: contact.linkedin || "https://linkedin.com", label: "LinkedIn" },
+    { icon: Mail, href: `mailto:${contact.email || "hello@scarlettrose.dev"}`, label: "Email" },
   ];
 
   return (
