@@ -77,7 +77,6 @@ export function useFirestoreDoc<T extends object>(
           setError(err.message);
           setData((prev) => prev || defaultData);
           setLoading(false);
-          handleFirestoreError(err, OperationType.GET, `${collectionName}/${docId}`);
         }
       );
 

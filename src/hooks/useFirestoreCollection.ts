@@ -90,7 +90,6 @@ export function useFirestoreCollection<T extends { id: string; order?: number }>
           // Fall back gracefully
           setItems((prev) => (prev.length > 0 ? prev : defaultItems));
           setLoading(false);
-          handleFirestoreError(err, OperationType.LIST, collectionName);
         }
       );
 
