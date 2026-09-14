@@ -6,21 +6,24 @@ import { ContactContent, FooterContent } from "../../types";
 import { HeroContent } from "../../types";
 
 export const Footer = () => {
-  const { data: footer } = useFirestoreDoc<FooterContent>(
+  const { data: footer, loading: footerLoading } = useFirestoreDoc<FooterContent>(
     "content",
     "footer",
     initialPortfolioData.footer
   );
-  const { data: contact } = useFirestoreDoc<ContactContent>(
+  const { data: contact, loading: contactLoading } = useFirestoreDoc<ContactContent>(
     "content",
     "contact",
     initialPortfolioData.contact
   );
-  const { data: hero } = useFirestoreDoc<HeroContent>(
+  const { data: hero, loading: heroLoading } = useFirestoreDoc<HeroContent>(
     "content",
     "hero",
     initialPortfolioData.hero
   );
+  if (footerLoading || contactLoading || heroLoading) {
+    return null;
+  }
   const morphingTexts = footer.animatedTexts?.filter((text) => text.trim()) || [];
 
   const socialLinks = [

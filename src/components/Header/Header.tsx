@@ -33,15 +33,15 @@ const navItems = [
 ];
 
 export default function Header() {
-  const { data: hero } = useFirestoreDoc<HeroContent>(
+  const { data: hero, loading } = useFirestoreDoc<HeroContent>(
     "content",
     "hero",
     initialPortfolioData.hero
   );
   const [showHeader, setShowHeader] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const displayName = hero.name || initialPortfolioData.hero.name;
-  const avatarUrl = hero.avatarUrl || initialPortfolioData.hero.avatarUrl;
+  const displayName = hero.name;
+  const avatarUrl = hero.avatarUrl;
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -70,6 +70,10 @@ export default function Header() {
       document.body.style.overflow = "";
     };
   }, [isMobileMenuOpen]);
+
+  if (loading) {
+    return null;
+  }
 
   // Handle escape key to close drawer
   useEffect(() => {

@@ -12,8 +12,12 @@ import { initialPortfolioData } from "../../data/initialData";
 import { ContactContent, HeroContent } from "../../types";
 
 export const HeroSection = () => {
-  const { data: hero } = useFirestoreDoc<HeroContent>("content", "hero", initialPortfolioData.hero);
+  const { data: hero, loading } = useFirestoreDoc<HeroContent>("content", "hero", initialPortfolioData.hero);
   const { data: contact } = useFirestoreDoc<ContactContent>("content", "contact", initialPortfolioData.contact);
+
+  if (loading) {
+    return <section id="hero" className="relative min-h-[100vh] bg-background" aria-busy="true" />;
+  }
 
   return (
     <section
