@@ -308,7 +308,7 @@ export default function Header() {
 
                 <div className="text-center pt-1">
                   <p className="text-[10px] text-muted-foreground">
-                    © {new Date().getFullYear()} Scarlett Rose · All Rights Reserved
+                    © {new Date().getFullYear()} {displayName} · All Rights Reserved
                   </p>
                 </div>
               </div>

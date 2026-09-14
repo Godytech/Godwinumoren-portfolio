@@ -147,7 +147,7 @@ export const HeroSection = () => {
           />
 
           <HangingIdCard
-            name={hero.cardName || hero.name}
+            name={hero.name}
             role={hero.role}
             badgeId={hero.badgeId}
             accentColor={hero.cardAccentColor || "#8b5cf6"}
@@ -171,8 +171,9 @@ export const HeroSection = () => {
                   }}
                 >
                   <img
+                    key={hero.avatarUrl}
                     src={hero.avatarUrl}
-                    alt={hero.cardName || hero.name}
+                    alt={hero.name}
                     className="w-full h-full object-cover rounded-full filter contrast-105"
                     loading="eager"
                   />
@@ -183,7 +184,7 @@ export const HeroSection = () => {
               <div className="p-5 flex flex-col items-center text-center bg-card text-card-foreground flex-1 gap-3">
                 <div>
                   <h3 className="text-xl font-extrabold tracking-tight text-foreground">
-                    {hero.cardName || hero.name}
+                    {hero.name}
                   </h3>
                   <div
                     className="inline-flex items-center gap-1.5 mt-1 px-3 py-0.5 rounded-full text-xs font-semibold transition-colors duration-300"

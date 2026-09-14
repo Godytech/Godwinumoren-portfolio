@@ -3,6 +3,7 @@ import { MorphingText } from "../lightswind/morphing-text";
 import { useFirestoreDoc } from "../../hooks/useFirestoreDoc";
 import { initialPortfolioData } from "../../data/initialData";
 import { ContactContent, FooterContent } from "../../types";
+import { HeroContent } from "../../types";
 
 export const Footer = () => {
   const { data: footer } = useFirestoreDoc<FooterContent>(
@@ -14,6 +15,11 @@ export const Footer = () => {
     "content",
     "contact",
     initialPortfolioData.contact
+  );
+  const { data: hero } = useFirestoreDoc<HeroContent>(
+    "content",
+    "hero",
+    initialPortfolioData.hero
   );
   const morphingTexts = footer.animatedTexts?.filter((text) => text.trim()) || [];
 
@@ -65,7 +71,7 @@ export const Footer = () => {
         {/* Bottom Row */}
         <div className="pt-6 border-t border-black/5 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5 font-medium text-center md:text-right">
-            <span>© 2026 Godwin Umoren. Built by Godytech</span>
+            <span>© {new Date().getFullYear()} {hero.name}. Built by Godytech</span>
           </div>
         </div>
       </div>
