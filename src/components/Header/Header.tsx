@@ -71,10 +71,6 @@ export default function Header() {
     };
   }, [isMobileMenuOpen]);
 
-  if (loading) {
-    return null;
-  }
-
   // Handle escape key to close drawer
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,6 +83,10 @@ export default function Header() {
     }
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isMobileMenuOpen]);
+
+  if (loading) {
+    return null;
+  }
 
   const handleScrollTo = (id: string) => {
     setIsMobileMenuOpen(false);
